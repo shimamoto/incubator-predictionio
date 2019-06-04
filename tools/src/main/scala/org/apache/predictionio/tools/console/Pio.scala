@@ -17,8 +17,8 @@
 
 package org.apache.predictionio.tools.console
 
-import org.apache.predictionio.tools.{BatchPredictArgs, DeployArgs, EventServerArgs, ServerArgs, SparkArgs, WorkflowArgs}
-import org.apache.predictionio.tools.commands.{AdminServerArgs, BuildArgs, DashboardArgs, Engine, EngineArgs, Export, ExportArgs, Import, ImportArgs, Management, AccessKey => AccessKeysCmd, App => AppCmd}
+import org.apache.predictionio.tools.{BatchPredictArgs, DeployArgs, ServerArgs, SparkArgs, WorkflowArgs}
+import org.apache.predictionio.tools.commands.{BuildArgs, DashboardArgs, Engine, EngineArgs, Management, App => AppCmd}
 import org.apache.predictionio.tools.ReturnTypes._
 import grizzled.slf4j.Logging
 
@@ -117,16 +117,6 @@ object Pio extends Logging {
     0
   }
 
-  def eventserver(ea: EventServerArgs): Int = {
-    Await.ready(Management.eventserver(ea).whenTerminated, Duration.Inf)
-    0
-  }
-
-  def adminserver(aa: AdminServerArgs): Int = {
-    Await.ready(Management.adminserver(aa).whenTerminated, Duration.Inf)
-    0
-  }
-
   def run(
     ea: EngineArgs,
     mainClass: String,
@@ -152,62 +142,36 @@ object Pio extends Logging {
     Management.status(pioHome, sparkHome)
   }
 
-  def imprt(ia: ImportArgs, sa: SparkArgs, pioHome: String): Int = {
-    processAwaitAndClean(Import.fileToEvents(ia, sa, pioHome))
-  }
-
-  def export(ea: ExportArgs, sa: SparkArgs, pioHome: String): Int = {
-    processAwaitAndClean(Export.eventsToFile(ea, sa, pioHome))
-  }
-
   object App {
 
     def create(
       name: String,
       id: Option[Int] = None,
-      description: Option[String] = None,
-      accessKey: String = ""): Int =
-        doOnSuccess(AppCmd.create(name, id, description, accessKey)) { appDesc =>
+      description: Option[String] = None): Int =
+        doOnSuccess(AppCmd.create(name, id, description)) { app =>
             info("Created a new app:")
-            info(s"      Name: ${appDesc.app.name}")
-            info(s"        ID: ${appDesc.app.id}")
-            info(s"Access Key: ${appDesc.keys.head.key}")
+            info(s"      Name: ${app.name}")
+            info(s"        ID: ${app.id}")
             0
         }
 
     def list(): Int = {
       val title = "Name"
-      val ak = "Access Key"
       val apps = AppCmd.list
-      info(f"$title%20s |   ID | $ak%64s | Allowed Event(s)")
-      apps foreach { appDesc =>
-        appDesc.keys foreach { k =>
-          val events =
-            if (k.events.size > 0) k.events.sorted.mkString(",") else "(all)"
-          info(f"${appDesc.app.name}%20s | ${appDesc.app.id}%4d | ${k.key}%64s | $events%s")
-        }
+      info(f"$title%20s |   ID")
+      apps foreach { app =>
+        info(f"${app.name}%20s | ${app.id}%4d")
       }
       info(s"Finished listing ${apps.size} app(s).")
       0
     }
 
     def show(appName: String): Int =
-      doOnSuccess(AppCmd.show(appName)) { case (appDesc, chans) =>
-        info(s"    App Name: ${appDesc.app.name}")
-        info(s"      App ID: ${appDesc.app.id}")
-        info(s" Description: ${appDesc.app.description.getOrElse("")}")
+      doOnSuccess(AppCmd.show(appName)) { case (app, chans) =>
+        info(s"    App Name: ${app.name}")
+        info(s"      App ID: ${app.id}")
+        info(s" Description: ${app.description.getOrElse("")}")
 
-        var firstKey = true
-        appDesc.keys foreach { k =>
-          val events =
-            if (k.events.size > 0) k.events.sorted.mkString(",") else "(all)"
-          if (firstKey) {
-            info(f"  Access Key: ${k.key}%s | ${events}%s")
-            firstKey = false
-          } else {
-            info(f"              ${k.key}%s | ${events}%s")
-          }
-        }
         var firstChan = true
         val titleName = "Channel Name"
         val titleID = "Channel ID"
@@ -222,11 +186,11 @@ object Pio extends Logging {
       }
 
     def delete(name: String, force: Boolean = false): Int =
-      doOnSuccess(AppCmd.show(name)) { case (appDesc, chans) =>
+      doOnSuccess(AppCmd.show(name)) { case (app, chans) =>
         info(s"The following app (including all channels) will be deleted. Are you sure?")
-        info(s"    App Name: ${appDesc.app.name}")
-        info(s"      App ID: ${appDesc.app.id}")
-        info(s" Description: ${appDesc.app.description.getOrElse("")}")
+        info(s"    App Name: ${app.name}")
+        info(s"      App ID: ${app.id}")
+        info(s" Description: ${app.description.getOrElse("")}")
         var firstChan = true
         val titleName = "Channel Name"
         val titleID = "Channel ID"
@@ -248,46 +212,6 @@ object Pio extends Logging {
         }
       }
 
-    def dataDelete(
-      name: String,
-      channel: Option[String] = None,
-      all: Boolean = false,
-      force: Boolean = false): Int =
-        doOnSuccess(AppCmd.show(name)) { case (appDesc, chans) =>
-
-          val channelId = channel.map { ch =>
-            val channelMap = chans.map(c => (c.name, c.id)).toMap
-            if (!channelMap.contains(ch)) {
-              error(s"Unable to delete data for channel.")
-              error(s"Channel ${ch} doesn't exist.")
-              return 1
-            }
-            channelMap(ch)
-          }
-          if (all) {
-            info(s"All data of the app (including default and all channels) will be deleted." +
-              " Are you sure?")
-          } else if (channelId.isDefined) {
-            info(s"Data of the following channel will be deleted. Are you sure?")
-            info(s"Channel Name: ${channel.get}")
-            info(s"  Channel ID: ${channelId.get}")
-          } else {
-            info(s"Data of the following app (default channel only) will be deleted. Are you sure?")
-          }
-          info(s"    App Name: ${appDesc.app.name}")
-          info(s"      App ID: ${appDesc.app.id}")
-          info(s" Description: ${appDesc.app.description}")
-
-          val choice = if(force) "YES" else readLine("Enter 'YES' to proceed: ")
-          choice match {
-            case "YES" =>
-              AppCmd.dataDelete(name, channel, all)
-            case _ =>
-              info("Aborted.")
-              0
-          }
-        }
-
     def channelNew(appName: String, newChannel: String): Int =
       AppCmd.channelNew(appName, newChannel)
 
@@ -295,7 +219,7 @@ object Pio extends Logging {
       appName: String,
       deleteChannel: String,
       force: Boolean = false): Int =
-        doOnSuccess(AppCmd.show(appName)) { case (appDesc, chans) =>
+        doOnSuccess(AppCmd.show(appName)) { case (app, chans) =>
           chans.find(chan => chan.name == deleteChannel) match {
             case None =>
               error(s"Unable to delete channel.")
@@ -305,8 +229,8 @@ object Pio extends Logging {
               info(s"The following channel will be deleted. Are you sure?")
               info(s"    Channel Name: ${deleteChannel}")
               info(s"      Channel ID: ${chan.id}")
-              info(s"        App Name: ${appDesc.app.name}")
-              info(s"          App ID: ${appDesc.app.id}")
+              info(s"        App Name: ${app.name}")
+              info(s"          App ID: ${app.id}")
               val choice = if(force) "YES" else readLine("Enter 'YES' to proceed: ")
               choice match {
                 case "YES" =>
@@ -318,30 +242,6 @@ object Pio extends Logging {
           }
         }
 
-  }
-
-  object AccessKey {
-
-    def create(
-      appName: String,
-      key: String,
-      events: Seq[String]): Int =
-        AccessKeysCmd.create(appName, key, events)
-
-    def list(app: Option[String]): Int =
-      doOnSuccess(AccessKeysCmd.list(app)) { keys =>
-        val title = "Access Key(s)"
-        info(f"$title%64s | App ID | Allowed Event(s)")
-        keys.sortBy(k => k.appid) foreach { k =>
-          val events =
-            if (k.events.size > 0) k.events.sorted.mkString(",") else "(all)"
-          info(f"${k.key}%64s | ${k.appid}%6d | $events%s")
-        }
-        info(s"Finished listing ${keys.size} access key(s).")
-        0
-      }
-
-    def delete(key: String): Int = AccessKeysCmd.delete(key)
   }
 
 }

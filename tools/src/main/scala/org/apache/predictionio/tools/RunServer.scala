@@ -37,8 +37,7 @@ case class DeployArgs(
 case class EventServerArgs(
   enabled: Boolean = false,
   ip: String = "0.0.0.0",
-  port: Int = 7070,
-  stats: Boolean = false)
+  port: Int = 7070)
 
 case class ServerArgs(
   deploy: DeployArgs = DeployArgs(),

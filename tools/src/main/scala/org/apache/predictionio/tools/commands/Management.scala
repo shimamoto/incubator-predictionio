@@ -19,16 +19,11 @@ package org.apache.predictionio.tools.commands
 
 import org.apache.predictionio.core.BuildInfo
 import org.apache.predictionio.data.storage
-import org.apache.predictionio.data.api.EventServer
-import org.apache.predictionio.data.api.EventServerConfig
-import org.apache.predictionio.tools.EventServerArgs
 import org.apache.predictionio.tools.EitherLogging
 import org.apache.predictionio.tools.Common
 import org.apache.predictionio.tools.ReturnTypes._
 import org.apache.predictionio.tools.dashboard.DashboardServer
 import org.apache.predictionio.tools.dashboard.DashboardConfig
-import org.apache.predictionio.tools.admin.AdminServer
-import org.apache.predictionio.tools.admin.AdminServerConfig
 
 import akka.actor.ActorSystem
 import java.io.File
@@ -38,10 +33,6 @@ import com.github.zafarkhaja.semver.Version
 case class DashboardArgs(
   ip: String = "127.0.0.1",
   port: Int = 9000)
-
-case class AdminServerArgs(
-  ip: String = "127.0.0.1",
-  port: Int = 7071)
 
 case class PioStatus(
   version: String = "",
@@ -65,32 +56,6 @@ object Management extends EitherLogging {
     DashboardServer.createDashboard(DashboardConfig(
       ip = da.ip,
       port = da.port))
-  }
-
-  /** Starts an eventserver server and returns immediately
-    *
-    * @param ea An instance of [[EventServerArgs]]
-    * @return An instance of [[ActorSystem]] in which the server is being executed
-    */
-  def eventserver(ea: EventServerArgs): ActorSystem = {
-    info(s"Creating Event Server at ${ea.ip}:${ea.port}")
-    EventServer.createEventServer(EventServerConfig(
-      ip = ea.ip,
-      port = ea.port,
-      stats = ea.stats))
-  }
-
-  /** Starts an adminserver server and returns immediately
-    *
-    * @param aa An instance of [[AdminServerArgs]]
-    * @return An instance of [[ActorSystem]] in which the server is being executed
-    */
-  def adminserver(aa: AdminServerArgs): ActorSystem = {
-    info(s"Creating Admin Server at ${aa.ip}:${aa.port}")
-    AdminServer.createAdminServer(AdminServerConfig(
-      ip = aa.ip,
-      port = aa.port
-    ))
   }
 
   private def stripMarginAndNewlines(string: String): String =

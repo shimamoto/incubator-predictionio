@@ -12,6 +12,6 @@ resolvers += "sonatype-releases" at "https://oss.sonatype.org/content/repositori
 
 addSbtPlugin("org.scoverage" % "sbt-scoverage" % "1.5.1")
 
-addSbtPlugin("com.typesafe.sbt" % "sbt-native-packager" % "1.3.6")
+addSbtPlugin("com.typesafe.sbt" % "sbt-native-packager" % "1.3.16")
 
 addSbtPlugin("com.typesafe.sbt" % "sbt-license-report" % "1.2.0")

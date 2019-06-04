@@ -64,55 +64,55 @@ val commonSettings = Seq(
   autoAPIMappings := true,
   licenseConfigurations := Set("compile"),
   licenseReportTypes := Seq(Csv),
-  unmanagedClasspath in Test += conf,
-  unmanagedClasspath in Test += baseDirectory.value.getParentFile / s"storage/jdbc/target/scala-${scalaBinaryVersion.value}/classes")
+  unmanagedClasspath in Test += conf)
+//  unmanagedClasspath in Test += baseDirectory.value.getParentFile / s"storage/jdbc/target/scala-${scalaBinaryVersion.value}/classes")
 
 val commonTestSettings = Seq(
   libraryDependencies ++= Seq(
     "org.postgresql"   % "postgresql"  % "9.4-1204-jdbc41" % "test",
     "org.scalikejdbc" %% "scalikejdbc" % "3.1.0" % "test"))
 
-val dataElasticsearch1 = (project in file("storage/elasticsearch1")).
-  settings(commonSettings: _*).
-  enablePlugins(GenJavadocPlugin)
-
-val dataElasticsearch = (project in file("storage/elasticsearch")).
-  settings(commonSettings: _*)
-
-val dataHbase = (project in file("storage/hbase")).
-  settings(commonSettings: _*).
-  enablePlugins(GenJavadocPlugin)
-
-val dataHdfs = (project in file("storage/hdfs")).
-  settings(commonSettings: _*).
-  enablePlugins(GenJavadocPlugin)
-
-val dataJdbc = (project in file("storage/jdbc")).
-  settings(commonSettings: _*).
-  enablePlugins(GenJavadocPlugin)
-
-val dataLocalfs = (project in file("storage/localfs")).
-  settings(commonSettings: _*).
-  enablePlugins(GenJavadocPlugin)
-
-val dataS3 = (project in file("storage/s3")).
-  settings(commonSettings: _*).
-  enablePlugins(GenJavadocPlugin)
+//val dataElasticsearch1 = (project in file("storage/elasticsearch1")).
+//  settings(commonSettings: _*).
+//  enablePlugins(GenJavadocPlugin)
+//
+//val dataElasticsearch = (project in file("storage/elasticsearch")).
+//  settings(commonSettings: _*)
+//
+//val dataHbase = (project in file("storage/hbase")).
+//  settings(commonSettings: _*).
+//  enablePlugins(GenJavadocPlugin)
+//
+//val dataHdfs = (project in file("storage/hdfs")).
+//  settings(commonSettings: _*).
+//  enablePlugins(GenJavadocPlugin)
+//
+//val dataJdbc = (project in file("storage/jdbc")).
+//  settings(commonSettings: _*).
+//  enablePlugins(GenJavadocPlugin)
+//
+//val dataLocalfs = (project in file("storage/localfs")).
+//  settings(commonSettings: _*).
+//  enablePlugins(GenJavadocPlugin)
+//
+//val dataS3 = (project in file("storage/s3")).
+//  settings(commonSettings: _*).
+//  enablePlugins(GenJavadocPlugin)
 
 val common = (project in file("common")).
   settings(commonSettings: _*).
   enablePlugins(GenJavadocPlugin).
   disablePlugins(sbtassembly.AssemblyPlugin)
 
-val data = (project in file("data")).
-  dependsOn(common).
-  settings(commonSettings: _*).
-  settings(commonTestSettings: _*).
-  enablePlugins(GenJavadocPlugin).
-  disablePlugins(sbtassembly.AssemblyPlugin)
+//val data = (project in file("data")).
+//  dependsOn(common).
+//  settings(commonSettings: _*).
+//  settings(commonTestSettings: _*).
+//  enablePlugins(GenJavadocPlugin).
+//  disablePlugins(sbtassembly.AssemblyPlugin)
 
 val core = (project in file("core")).
-  dependsOn(data).
+  dependsOn(common).
   settings(commonSettings: _*).
   settings(commonTestSettings: _*).
   enablePlugins(GenJavadocPlugin).
@@ -131,44 +131,40 @@ val core = (project in file("core")).
   enablePlugins(SbtTwirl).
   disablePlugins(sbtassembly.AssemblyPlugin)
 
-val e2 = (project in file("e2")).
-  dependsOn(core).
-  settings(commonSettings: _*).
-  enablePlugins(GenJavadocPlugin).
-  disablePlugins(sbtassembly.AssemblyPlugin)
-
 val tools = (project in file("tools")).
-  dependsOn(e2).
+  dependsOn(core).
   settings(commonSettings: _*).
   settings(commonTestSettings: _*).
   settings(skip in publish := true).
   enablePlugins(GenJavadocPlugin).
   enablePlugins(SbtTwirl)
 
-val dataEs = if (majorVersion(es) == 1) dataElasticsearch1 else dataElasticsearch
+//val dataEs = if (majorVersion(es) == 1) dataElasticsearch1 else dataElasticsearch
+//
+//val storageSubprojects = Seq(
+//    dataEs,
+//    dataHbase,
+//    dataHdfs,
+//    dataJdbc,
+//    dataLocalfs,
+//    dataS3)
 
-val storageSubprojects = Seq(
-    dataEs,
-    dataHbase,
-    dataHdfs,
-    dataJdbc,
-    dataLocalfs,
-    dataS3)
-
-val storage = (project in file("storage"))
-  .settings(skip in publish := true)
-  .aggregate(storageSubprojects map Project.projectToRef: _*)
-  .disablePlugins(sbtassembly.AssemblyPlugin)
+//val storage = (project in file("storage"))
+//  .settings(skip in publish := true)
+//  .aggregate(storageSubprojects map Project.projectToRef: _*)
+//  .disablePlugins(sbtassembly.AssemblyPlugin)
 
 val assembly = (project in file("assembly")).
   settings(commonSettings: _*)
+
+val eventServer = (project in file("event-server"))
 
 val root = (project in file(".")).
   settings(commonSettings: _*).
   enablePlugins(ScalaUnidocPlugin).
   settings(
-    unidocProjectFilter in (ScalaUnidoc, unidoc) := inAnyProject -- inProjects(dataElasticsearch, dataElasticsearch1),
-    unidocProjectFilter in (JavaUnidoc, unidoc) := inAnyProject -- inProjects(dataElasticsearch, dataElasticsearch1),
+//    unidocProjectFilter in (ScalaUnidoc, unidoc) := inAnyProject -- inProjects(dataElasticsearch, dataElasticsearch1),
+//    unidocProjectFilter in (JavaUnidoc, unidoc) := inAnyProject -- inProjects(dataElasticsearch, dataElasticsearch1),
     scalacOptions in (ScalaUnidoc, unidoc) ++= Seq(
       "-groups",
       "-skip-packages",
@@ -229,7 +225,7 @@ val root = (project in file(".")).
       "docs/javadoc/javadoc-overview.html",
       "-noqualifier",
       "java.lang")).
-  aggregate(common, core, data, tools, e2).
+  aggregate(common, core, tools, eventServer).
   disablePlugins(sbtassembly.AssemblyPlugin)
 
 val pioUnidoc = taskKey[Unit]("Builds PredictionIO ScalaDoc")

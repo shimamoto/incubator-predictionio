@@ -24,8 +24,7 @@ import java.net.URI
 import grizzled.slf4j.Logging
 import org.apache.predictionio.core.BuildInfo
 import org.apache.predictionio.tools.commands.{
-  DashboardArgs, AdminServerArgs, ImportArgs, ExportArgs,
-  BuildArgs, EngineArgs}
+  DashboardArgs, BuildArgs, EngineArgs}
 import org.apache.predictionio.tools.{
   EventServerArgs, SparkArgs, WorkflowArgs, ServerArgs,
   DeployArgs, BatchPredictArgs}
@@ -41,14 +40,11 @@ case class ConsoleArgs(
   spark: SparkArgs = SparkArgs(),
   engine: EngineArgs = EngineArgs(),
   workflow: WorkflowArgs = WorkflowArgs(),
-  accessKey: AccessKeyArgs = AccessKeyArgs(),
   deploy: DeployArgs = DeployArgs(),
   batchPredict: BatchPredictArgs = BatchPredictArgs(),
   eventServer: EventServerArgs = EventServerArgs(),
-  adminServer: AdminServerArgs = AdminServerArgs(),
+  accessKey: Option[String] = None,
   dashboard: DashboardArgs = DashboardArgs(),
-  export: ExportArgs = ExportArgs(),
-  imprt: ImportArgs = ImportArgs(),
   commands: Seq[String] = Nil,
   metricsParamsJsonPath: Option[String] = None,
   paramsPath: String = "params",
@@ -66,10 +62,6 @@ case class AppArgs(
   all: Boolean = false,
   force: Boolean = false,
   description: Option[String] = None)
-
-case class AccessKeyArgs(
-  accessKey: String = "",
-  events: Seq[String] = Nil)
 
 case class EngineInfo(
   engineId: String,
@@ -285,14 +277,8 @@ object Console extends Logging {
           opt[Int]("event-server-port") action { (x, c) =>
             c.copy(eventServer = c.eventServer.copy(port = x))
           } text("Event server port. Default: 7070"),
-          opt[Int]("admin-server-port") action { (x, c) =>
-            c.copy(adminServer = c.adminServer.copy(port = x))
-          } text("Admin server port. Default: 7071"),
-          opt[String]("admin-server-ip") action { (x, c) =>
-          c.copy(adminServer = c.adminServer.copy(ip = x))
-          } text("Admin server IP. Default: localhost"),
           opt[String]("accesskey") action { (x, c) =>
-            c.copy(accessKey = c.accessKey.copy(accessKey = x))
+            c.copy(accessKey = Some(x))
           } text("Access key of the App where feedback data will be stored."),
           opt[Unit]("uber-jar") action { (x, c) =>
             c.copy(build = c.build.copy(uberJar = true))
@@ -381,34 +367,6 @@ object Console extends Logging {
           } text("Port to bind to. Default: 9000")
         )
       note("")
-      cmd("eventserver").
-        text("Launch an Event Server at the specific IP and port.").
-        action { (_, c) =>
-          c.copy(commands = c.commands :+ "eventserver")
-        } children(
-          opt[String]("ip") action { (x, c) =>
-            c.copy(eventServer = c.eventServer.copy(ip = x))
-          },
-          opt[Int]("port") action { (x, c) =>
-            c.copy(eventServer = c.eventServer.copy(port = x))
-          } text("Port to bind to. Default: 7070"),
-          opt[Unit]("stats") action { (x, c) =>
-            c.copy(eventServer = c.eventServer.copy(stats = true))
-          }
-        )
-      cmd("adminserver").
-        text("Launch an Admin Server at the specific IP and port.").
-        action { (_, c) =>
-        c.copy(commands = c.commands :+ "adminserver")
-      } children(
-        opt[String]("ip") action { (x, c) =>
-          c.copy(adminServer = c.adminServer.copy(ip = x))
-        } text("IP to bind to. Default: localhost"),
-        opt[Int]("port") action { (x, c) =>
-          c.copy(adminServer = c.adminServer.copy(port = x))
-        } text("Port to bind to. Default: 7071")
-        )
-      note("")
       cmd("run").
         text("Launch a driver program. This command will pass all\n" +
           "pass-through arguments to its underlying spark-submit command.\n" +
@@ -438,12 +396,6 @@ object Console extends Logging {
           c.copy(commands = c.commands :+ "status")
         }
       note("")
-      cmd("upgrade").
-        text("No longer supported!").
-        action { (_, c) =>
-          c.copy(commands = c.commands :+ "upgrade")
-        }
-      note("")
       cmd("app").
         text("Manage apps.\n").
         action { (_, c) =>
@@ -461,7 +413,7 @@ object Console extends Logging {
                 c.copy(app = c.app.copy(description = Some(x)))
               },
               opt[String]("access-key") action { (x, c) =>
-                c.copy(accessKey = c.accessKey.copy(accessKey = x))
+                c.copy(accessKey = Some(x))
               },
               arg[String]("<name>") action { (x, c) =>
                 c.copy(app = c.app.copy(name = x))
@@ -497,25 +449,6 @@ object Console extends Logging {
               } text("Delete an app without prompting for confirmation")
             ),
           note(""),
-          cmd("data-delete").
-            text("Delete data of an app").
-            action { (_, c) =>
-              c.copy(commands = c.commands :+ "data-delete")
-            } children(
-              arg[String]("<name>") action { (x, c) =>
-                c.copy(app = c.app.copy(name = x))
-              } text("Name of the app whose data to be deleted."),
-              opt[String]("channel") action { (x, c) =>
-                c.copy(app = c.app.copy(dataDeleteChannel = Some(x)))
-              } text("Name of channel whose data to be deleted."),
-              opt[Unit]("all") action { (x, c) =>
-                c.copy(app = c.app.copy(all = true))
-              } text("Delete data of all channels including default"),
-              opt[Unit]("force") abbr("f") action { (x, c) =>
-                c.copy(app = c.app.copy(force = true))
-              } text("Delete data of an app without prompting for confirmation")
-            ),
-          note(""),
           cmd("channel-new").
             text("Create a new channel for the app.").
             action { (_, c) =>
@@ -544,95 +477,6 @@ object Console extends Logging {
                 c.copy(app = c.app.copy(force = true))
               } text("Delete a channel of the app without prompting for confirmation")
             )
-        )
-      note("")
-      cmd("accesskey").
-        text("Manage app access keys.\n").
-        action { (_, c) =>
-          c.copy(commands = c.commands :+ "accesskey")
-        } children(
-          cmd("new").
-            text("Add allowed event(s) to an access key.").
-            action { (_, c) =>
-              c.copy(commands = c.commands :+ "new")
-            } children(
-              opt[String]("key") action { (x, c) =>
-                c.copy(accessKey = c.accessKey.copy(accessKey = x))
-              },
-              arg[String]("<app name>") action { (x, c) =>
-                c.copy(app = c.app.copy(name = x))
-              },
-              arg[String]("[<event1> <event2> ...]") unbounded() optional()
-                action { (x, c) =>
-                  c.copy(accessKey = c.accessKey.copy(
-                    events = c.accessKey.events :+ x))
-                }
-            ),
-          cmd("list").
-            text("List all access keys of an app.").
-            action { (_, c) =>
-              c.copy(commands = c.commands :+ "list")
-            } children(
-              arg[String]("<app name>") optional() action { (x, c) =>
-                c.copy(app = c.app.copy(name = x))
-              } text("App name.")
-            ),
-          note(""),
-          cmd("delete").
-            text("Delete an access key.").
-            action { (_, c) =>
-              c.copy(commands = c.commands :+ "delete")
-            } children(
-              arg[String]("<access key>") action { (x, c) =>
-                c.copy(accessKey = c.accessKey.copy(accessKey = x))
-              } text("The access key to be deleted.")
-            )
-        )
-      cmd("template").
-        action { (_, c) =>
-          c.copy(commands = c.commands :+ "template")
-        } children(
-          cmd("get").
-            text("No longer supported! Use git clone to download a template").
-            action { (_, c) =>
-              c.copy(commands = c.commands :+ "get")
-            },
-          cmd("list").
-            text("No longer supported! Use git to manage your templates").
-            action { (_, c) =>
-              c.copy(commands = c.commands :+ "list")
-            }
-        )
-      cmd("export").
-        action { (_, c) =>
-          c.copy(commands = c.commands :+ "export")
-        } children(
-          opt[Int]("appid") required() action { (x, c) =>
-            c.copy(export = c.export.copy(appId = x))
-          },
-          opt[String]("output") required() action { (x, c) =>
-            c.copy(export = c.export.copy(outputPath = x))
-          },
-          opt[String]("format") action { (x, c) =>
-            c.copy(export = c.export.copy(format = x))
-          },
-          opt[String]("channel") action { (x, c) =>
-            c.copy(export = c.export.copy(channel = Some(x)))
-          }
-        )
-      cmd("import").
-        action { (_, c) =>
-          c.copy(commands = c.commands :+ "import")
-        } children(
-          opt[Int]("appid") required() action { (x, c) =>
-            c.copy(imprt = c.imprt.copy(appId = x))
-          },
-          opt[String]("input") required() action { (x, c) =>
-            c.copy(imprt = c.imprt.copy(inputPath = x))
-          },
-          opt[String]("channel") action { (x, c) =>
-            c.copy(imprt = c.imprt.copy(channel = Some(x)))
-          }
         )
     }
 
@@ -681,7 +525,7 @@ object Console extends Logging {
               ca.deploy,
               ca.eventServer,
               ca.workflow.batch,
-              ca.accessKey.accessKey,
+              ca.accessKey.getOrElse(""),
               ca.workflow.variantJson,
               ca.workflow.jsonExtractor),
             ca.spark,
@@ -704,10 +548,6 @@ object Console extends Logging {
             ca.verbose)
         case Seq("dashboard") =>
           Pio.dashboard(ca.dashboard)
-        case Seq("eventserver") =>
-          Pio.eventserver(ca.eventServer)
-        case Seq("adminserver") =>
-          Pio.adminserver(ca.adminServer)
         case Seq("run") =>
           Pio.run(
             ca.engine,
@@ -719,41 +559,19 @@ object Console extends Logging {
             ca.verbose)
         case Seq("status") =>
           Pio.status(ca.pioHome, ca.spark.sparkHome)
-        case Seq("upgrade") =>
-          error("Upgrade is no longer supported")
-          1
         case Seq("app", "new") =>
           Pio.App.create(
-            ca.app.name, ca.app.id, ca.app.description, ca.accessKey.accessKey)
+            ca.app.name, ca.app.id, ca.app.description)
         case Seq("app", "list") =>
           Pio.App.list()
         case Seq("app", "show") =>
           Pio.App.show(ca.app.name)
         case Seq("app", "delete") =>
           Pio.App.delete(ca.app.name, ca.app.force)
-        case Seq("app", "data-delete") =>
-          Pio.App.dataDelete(
-            ca.app.name, ca.app.dataDeleteChannel, ca.app.all, ca.app.force)
         case Seq("app", "channel-new") =>
           Pio.App.channelNew(ca.app.name, ca.app.channel)
         case Seq("app", "channel-delete") =>
           Pio.App.channelDelete(ca.app.name, ca.app.channel, ca.app.force)
-        case Seq("accesskey", "new") =>
-          Pio.AccessKey.create(
-            ca.app.name, ca.accessKey.accessKey, ca.accessKey.events)
-        case Seq("accesskey", "list") =>
-         Pio.AccessKey.list(
-           if (ca.app.name == "") None else Some(ca.app.name))
-        case Seq("accesskey", "delete") =>
-          Pio.AccessKey.delete(ca.accessKey.accessKey)
-        case Seq("template", _) =>
-          error("template commands are no longer supported.")
-          error("Please use git to get and manage your templates.")
-          1
-        case Seq("export") =>
-          Pio.export(ca.export, ca.spark, ca.pioHome.get)
-        case Seq("import") =>
-          Pio.imprt(ca.imprt, ca.spark, ca.pioHome.get)
         case _ =>
           System.err.println(help(ca.commands))
           1
@@ -808,19 +626,12 @@ object Console extends Logging {
   val helpText = Map(
     "" -> mainHelp,
     "status" -> txt.status().toString,
-    "upgrade" -> txt.upgrade().toString,
     "version" -> txt.version().toString,
-    "template" -> txt.template().toString,
     "build" -> txt.build().toString,
     "train" -> txt.train().toString,
     "deploy" -> txt.deploy().toString,
     "batchpredict" -> txt.batchpredict().toString,
-    "eventserver" -> txt.eventserver().toString,
-    "adminserver" -> txt.adminserver().toString,
     "app" -> txt.app().toString,
-    "accesskey" -> txt.accesskey().toString,
-    "import" -> txt.imprt().toString,
-    "export" -> txt.export().toString,
     "run" -> txt.run().toString,
     "eval" -> txt.eval().toString,
     "dashboard" -> txt.dashboard().toString)

@@ -1,0 +1,30 @@
+recommendation:
+  event:
+    type: varchar
+    size: 255
+  entityType:
+    type: varchar
+    size: 255
+  entityId:
+    type: varchar
+    size: 255
+  targetEntityType:
+    type: text
+  targetEntityId:
+    type: text
+  properties:
+    type: text
+  eventTime:
+    type: timestamp
+  eventTimeZone:
+    type: varchar
+    size: 50
+  tags:
+    type: text
+  prId:
+    type: text
+  creationTime:
+    type: timestamp
+  creationTimeZone:
+    type: varchar
+    size: 50
