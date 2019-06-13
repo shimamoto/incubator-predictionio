@@ -119,6 +119,7 @@ class HBPEvents(client: HBClient, config: StorageClientConfig, namespace: String
       conf.set(TableOutputFormat.OUTPUT_TABLE,
         tableName)
 
+
       val table = new HTable(conf, tableName)
       iter.foreach { id =>
         val rowKey = HBEventsUtil.RowKey(id)

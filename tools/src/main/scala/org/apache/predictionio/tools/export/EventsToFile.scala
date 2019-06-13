@@ -26,7 +26,7 @@ import org.apache.predictionio.workflow.WorkflowContext
 import org.apache.predictionio.workflow.WorkflowUtils
 import org.apache.predictionio.workflow.CleanupFunctions
 import grizzled.slf4j.Logging
-import org.apache.spark.sql.{SaveMode, SparkSession}
+import org.apache.spark.sql.{Encoders, SaveMode, SparkSession}
 import org.json4s.native.Serialization._
 
 case class EventsToFileArgs(
@@ -98,7 +98,7 @@ object EventsToFile extends Logging {
         if (args.format == "json") {
           jsonStringRdd.saveAsTextFile(args.outputPath)
         } else {
-          val jsonDf = sqlSession.read.json(jsonStringRdd)
+          val jsonDf = sqlSession.read.json(sqlSession.createDataset(jsonStringRdd)(Encoders.STRING))
           jsonDf.write.mode(SaveMode.ErrorIfExists).parquet(args.outputPath)
         }
         info(s"Events are exported to ${args.outputPath}/.")

@@ -23,6 +23,7 @@ import org.apache.predictionio.data.storage.EvaluationInstance
 import org.apache.predictionio.data.storage.EvaluationInstances
 import org.apache.predictionio.data.storage.StorageClientConfig
 import scalikejdbc._
+import scalikejdbc.jodatime.JodaWrappedResultSet._
 
 /** JDBC implementations of [[EvaluationInstances]] */
 class JDBCEvaluationInstances(client: String, config: StorageClientConfig, prefix: String)

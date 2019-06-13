@@ -19,8 +19,6 @@ package org.apache.predictionio.data.storage.elasticsearch
 
 import java.io.IOException
 
-import scala.collection.JavaConverters._
-
 import org.apache.http.entity.ContentType
 import org.apache.http.nio.entity.NStringEntity
 import org.apache.http.util.EntityUtils
@@ -28,7 +26,7 @@ import org.apache.predictionio.data.storage.EvaluationInstance
 import org.apache.predictionio.data.storage.EvaluationInstanceSerializer
 import org.apache.predictionio.data.storage.EvaluationInstances
 import org.apache.predictionio.data.storage.StorageClientConfig
-import org.elasticsearch.client.{ResponseException, RestClient}
+import org.elasticsearch.client.{Request, ResponseException, RestClient}
 import org.json4s._
 import org.json4s.JsonDSL._
 import org.json4s.native.JsonMethods._
@@ -78,9 +76,8 @@ class ESEvaluationInstances(client: RestClient, config: StorageClientConfig, ind
   def get(id: String): Option[EvaluationInstance] = {
     try {
       val response = client.performRequest(
-        "GET",
-        s"/$internalIndex/$estype/$id",
-        Map.empty[String, String].asJava)
+        new Request("GET", s"/$internalIndex/$estype/$id")
+      )
       val jsonResponse = parse(EntityUtils.toString(response.getEntity))
       (jsonResponse \ "found").extract[Boolean] match {
         case true =>
@@ -135,12 +132,10 @@ class ESEvaluationInstances(client: RestClient, config: StorageClientConfig, ind
   def update(i: EvaluationInstance): Unit = {
     val id = i.id
     try {
-      val entity = new NStringEntity(write(i), ContentType.APPLICATION_JSON)
-      val response = client.performRequest(
-        "POST",
-        s"/$internalIndex/$estype/$id",
-        Map("refresh" -> "true").asJava,
-        entity)
+      val request = new Request("POST", s"/$internalIndex/$estype/$id")
+      request.addParameter("refresh", "true")
+      request.setEntity(new NStringEntity(write(i), ContentType.APPLICATION_JSON))
+      val response = client.performRequest(request)
       val json = parse(EntityUtils.toString(response.getEntity))
       val result = (json \ "result").extract[String]
       result match {
@@ -157,10 +152,9 @@ class ESEvaluationInstances(client: RestClient, config: StorageClientConfig, ind
 
   def delete(id: String): Unit = {
     try {
-      val response = client.performRequest(
-        "DELETE",
-        s"/$internalIndex/$estype/$id",
-        Map("refresh" -> "true").asJava)
+      val request = new Request("DELETE", s"/$internalIndex/$estype/$id")
+      request.addParameter("refresh", "true")
+      val response = client.performRequest(request)
       val json = parse(EntityUtils.toString(response.getEntity))
       val result = (json \ "result").extract[String]
       result match {

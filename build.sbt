@@ -26,7 +26,7 @@ scalaVersion in ThisBuild := sys.props.getOrElse("scala.version", "2.11.12")
 
 scalaBinaryVersion in ThisBuild := binaryVersion(scalaVersion.value)
 
-crossScalaVersions in ThisBuild := Seq("2.11.12")
+crossScalaVersions in ThisBuild := Seq(scalaVersion.value)
 
 scalacOptions in ThisBuild ++= Seq("-deprecation", "-unchecked", "-feature")
 
@@ -37,17 +37,15 @@ javacOptions in (ThisBuild, compile) ++= Seq("-source", "1.8", "-target", "1.8",
   "-Xlint:deprecation", "-Xlint:unchecked")
 
 // Ignore differentiation of Spark patch levels
-sparkVersion in ThisBuild := sys.props.getOrElse("spark.version", "2.1.3")
+sparkVersion in ThisBuild := sys.props.getOrElse("spark.version", "2.4.3")
 
 sparkBinaryVersion in ThisBuild := binaryVersion(sparkVersion.value)
 
 hadoopVersion in ThisBuild := sys.props.getOrElse("hadoop.version", "2.7.7")
 
-akkaVersion in ThisBuild := sys.props.getOrElse("akka.version", "2.5.17")
+elasticsearchVersion in ThisBuild := sys.props.getOrElse("elasticsearch.version", "6.8.0")
 
-elasticsearchVersion in ThisBuild := sys.props.getOrElse("elasticsearch.version", "5.6.9")
-
-hbaseVersion in ThisBuild := sys.props.getOrElse("hbase.version", "1.2.6")
+hbaseVersion in ThisBuild := sys.props.getOrElse("hbase.version", "1.4.10")
 
 json4sVersion in ThisBuild := {
   sparkBinaryVersion.value match {
@@ -64,11 +62,6 @@ val commonSettings = Seq(
   licenseReportTypes := Seq(Csv),
   unmanagedClasspath in Test += conf,
   unmanagedClasspath in Test += baseDirectory.value.getParentFile / s"storage/jdbc/target/scala-${scalaBinaryVersion.value}/classes")
-
-val commonTestSettings = Seq(
-  libraryDependencies ++= Seq(
-    "org.postgresql"   % "postgresql"  % "9.4-1204-jdbc41" % "test",
-    "org.scalikejdbc" %% "scalikejdbc" % "3.1.0" % "test"))
 
 val dataElasticsearch = (project in file("storage/elasticsearch")).
   settings(commonSettings: _*)
@@ -101,14 +94,12 @@ val common = (project in file("common")).
 val data = (project in file("data")).
   dependsOn(common).
   settings(commonSettings: _*).
-  settings(commonTestSettings: _*).
   enablePlugins(GenJavadocPlugin).
   disablePlugins(sbtassembly.AssemblyPlugin)
 
 val core = (project in file("core")).
   dependsOn(data).
   settings(commonSettings: _*).
-  settings(commonTestSettings: _*).
   enablePlugins(GenJavadocPlugin).
   enablePlugins(BuildInfoPlugin).
   settings(
@@ -134,7 +125,6 @@ val e2 = (project in file("e2")).
 val tools = (project in file("tools")).
   dependsOn(e2).
   settings(commonSettings: _*).
-  settings(commonTestSettings: _*).
   settings(skip in publish := true).
   enablePlugins(GenJavadocPlugin).
   enablePlugins(SbtTwirl)

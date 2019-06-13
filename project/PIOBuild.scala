@@ -24,7 +24,6 @@ object PIOBuild {
   val sparkVersion = settingKey[String]("The version of Apache Spark used for building")
   val sparkBinaryVersion = settingKey[String]("The binary version of Apache Spark used for building")
   val hadoopVersion = settingKey[String]("The version of Apache Hadoop used for building")
-  val akkaVersion = settingKey[String]("The version of Akka used for building")
 
   val childrenPomExtra = settingKey[scala.xml.NodeSeq]("Extra POM data for children projects")
 

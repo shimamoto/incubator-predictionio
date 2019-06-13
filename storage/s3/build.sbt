@@ -21,20 +21,13 @@ name := "apache-predictionio-data-s3"
 
 libraryDependencies ++= Seq(
   "org.apache.predictionio" %% "apache-predictionio-core" % version.value % "provided",
-  "com.google.guava"        % "guava"                     % "14.0.1"      % "provided",
-  "com.amazonaws"           % "aws-java-sdk-s3"           % "1.11.132",
-  "org.scalatest"           %% "scalatest"                % "2.1.7" % "test")
+  "com.amazonaws"           % "aws-java-sdk-s3"           % "1.11.571")
 
 parallelExecution in Test := false
 
 pomExtra := childrenPomExtra.value
 
 assemblyOption in assembly := (assemblyOption in assembly).value.copy(includeScala = false)
-
-assemblyShadeRules in assembly := Seq(
-  ShadeRule.rename("org.apache.http.**" -> "shadeio.data.s3.http.@1").inAll,
-  ShadeRule.rename("com.fasterxml.**" -> "shadeio.data.s3.fasterxml.@1").inAll
-)
 
 // skip test in assembly
 test in assembly := {}

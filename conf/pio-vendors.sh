@@ -24,7 +24,7 @@ if [ -z "$PIO_SCALA_VERSION" ]; then
 fi
 
 if [ -z "$PIO_SPARK_VERSION" ]; then
-    PIO_SPARK_VERSION="2.1.3"
+    PIO_SPARK_VERSION="2.4.3"
 fi
 
 if [ -z "$PIO_HADOOP_VERSION" ]; then
@@ -32,7 +32,7 @@ if [ -z "$PIO_HADOOP_VERSION" ]; then
 fi
 
 if [ -z "$PIO_ELASTICSEARCH_VERSION" ]; then
-    PIO_ELASTICSEARCH_VERSION="5.6.9"
+    PIO_ELASTICSEARCH_VERSION="6.8.0"
 fi
 
 if [ -z "$PIO_HBASE_VERSION" ]; then
@@ -45,7 +45,7 @@ export ES_TAG="$PIO_ELASTICSEARCH_VERSION"
 HBASE_MAJOR=`echo $PIO_HBASE_VERSION | awk -F. '{print $1 "." $2}'`
 export HBASE_TAG="$HBASE_MAJOR"
 
-PGSQL_JAR=postgresql-9.4-1204.jdbc41.jar
+PGSQL_JAR=postgresql-42.2.5.jar
 PGSQL_DOWNLOAD=https://jdbc.postgresql.org/download/${PGSQL_JAR}
 
 HADOOP_MAJOR=`echo $PIO_HADOOP_VERSION | awk -F. '{print $1 "." $2}'`

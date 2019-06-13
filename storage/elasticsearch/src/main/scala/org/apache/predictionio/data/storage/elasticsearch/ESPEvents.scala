@@ -17,8 +17,6 @@
 
 package org.apache.predictionio.data.storage.elasticsearch
 
-import scala.collection.JavaConverters._
-
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.io.MapWritable
 import org.apache.hadoop.io.Text
@@ -27,7 +25,7 @@ import org.apache.predictionio.data.storage.PEvents
 import org.apache.predictionio.data.storage.StorageClientConfig
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
-import org.elasticsearch.client.RestClient
+import org.elasticsearch.client.{Request, RestClient}
 import org.elasticsearch.hadoop.mr.EsInputFormat
 import org.elasticsearch.spark._
 import org.joda.time.DateTime
@@ -117,12 +115,10 @@ class ESPEvents(client: RestClient, config: StorageClientConfig, baseIndex: Stri
               ("query" ->
                 ("term" ->
                   ("eventId" -> eventId)))
-            val entity = new NStringEntity(compact(render(json)), ContentType.APPLICATION_JSON)
-            val response = client.performRequest(
-              "POST",
-              s"/$index/$estype/_delete_by_query",
-              Map("refresh" -> ESUtils.getEventDataRefresh(config)).asJava,
-              entity)
+            val request = new Request("POST", s"/$index/$estype/_delete_by_query")
+            request.addParameter("refresh", ESUtils.getEventDataRefresh(config))
+            request.setEntity(new NStringEntity(compact(render(json)), ContentType.APPLICATION_JSON))
+            val response = client.performRequest(request)
           val jsonResponse = parse(EntityUtils.toString(response.getEntity))
           val result = (jsonResponse \ "result").extract[String]
           result match {

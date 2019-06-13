@@ -20,8 +20,7 @@ import PIOBuild._
 name := "apache-predictionio-data-localfs"
 
 libraryDependencies ++= Seq(
-  "org.apache.predictionio" %% "apache-predictionio-core" % version.value % "provided",
-  "org.scalatest"           %% "scalatest"      % "2.1.7" % "test")
+  "org.apache.predictionio" %% "apache-predictionio-core" % version.value % "provided")
 
 parallelExecution in Test := false
 
