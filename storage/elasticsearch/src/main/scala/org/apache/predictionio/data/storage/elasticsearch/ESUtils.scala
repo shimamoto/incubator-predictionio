@@ -17,9 +17,12 @@
 
 package org.apache.predictionio.data.storage.elasticsearch
 
+import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
+
 import org.apache.http.entity.ContentType
 import org.apache.http.nio.entity.NStringEntity
-import org.elasticsearch.client.{Request, RestClient}
+import org.elasticsearch.client.RestClient
 import org.json4s._
 import org.json4s.JsonDSL._
 import org.json4s.native.JsonMethods._
@@ -93,10 +96,12 @@ object ESUtils {
     query: String,
     size: Int)(
       implicit formats: Formats): Seq[JValue] = {
-    val request = new Request("POST", s"/$index/$estype/_search")
-    request.addParameter("size", s"$size")
-    request.setEntity(new NStringEntity(query, ContentType.APPLICATION_JSON))
-    val response = client.performRequest(request)
+    val entity = new NStringEntity(query, ContentType.APPLICATION_JSON)
+    val response = client.performRequest(
+      "POST",
+      s"/$index/$estype/_search",
+      Map("size" -> s"${size}"),
+      entity)
     val responseJValue = parse(EntityUtils.toString(response.getEntity))
     val hits = (responseJValue \ "hits" \ "hits").extract[Seq[JValue]]
     hits.map(h => (h \ "_source"))
@@ -132,9 +137,12 @@ object ESUtils {
       if (hits.isEmpty) results
       else {
         val json = ("scroll" -> scrollLife) ~ ("scroll_id" -> scrollId)
-        val request = new Request("POST", "/_search/scroll")
-        request.setEntity(new NStringEntity(compact(render(json)), ContentType.APPLICATION_JSON))
-        val response = client.performRequest(request)
+        val scrollBody = new NStringEntity(compact(render(json)), ContentType.APPLICATION_JSON)
+        val response = client.performRequest(
+          "POST",
+          "/_search/scroll",
+          Map[String, String](),
+          scrollBody)
         val responseJValue = parse(EntityUtils.toString(response.getEntity))
         scroll((responseJValue \ "_scroll_id").extract[String],
           (responseJValue \ "hits" \ "hits").extract[Seq[JValue]],
@@ -142,10 +150,12 @@ object ESUtils {
       }
     }
 
-    val request = new Request("POST", s"/$index/$estype/_search")
-    request.addParameter("scroll", scrollLife)
-    request.setEntity(new NStringEntity(query, ContentType.APPLICATION_JSON))
-    val response = client.performRequest(request)
+    val entity = new NStringEntity(query, ContentType.APPLICATION_JSON)
+    val response = client.performRequest(
+      "POST",
+      s"/$index/$estype/_search",
+      Map("scroll" -> scrollLife),
+      entity)
     val responseJValue = parse(EntityUtils.toString(response.getEntity))
     scroll((responseJValue \ "_scroll_id").extract[String],
       (responseJValue \ "hits" \ "hits").extract[Seq[JValue]],
@@ -156,12 +166,14 @@ object ESUtils {
     client: RestClient,
     index: String): Unit = {
     client.performRequest(
-      new Request("HEAD", s"/$index")
-    ).getStatusLine.getStatusCode match {
+      "HEAD",
+      s"/$index",
+      Map.empty[String, String].asJava).getStatusLine.getStatusCode match {
         case 404 =>
           client.performRequest(
-            new Request("PUT", s"/$index")
-          )
+            "PUT",
+            s"/$index",
+            Map.empty[String, String].asJava)
         case 200 =>
         case _ =>
           throw new IllegalStateException(s"/$index is invalid.")
@@ -174,12 +186,16 @@ object ESUtils {
     estype: String,
     json: String): Unit = {
     client.performRequest(
-      new Request("HEAD", s"/$index/_mapping/$estype")
-    ).getStatusLine.getStatusCode match {
+      "HEAD",
+      s"/$index/_mapping/$estype",
+      Map.empty[String, String].asJava).getStatusLine.getStatusCode match {
         case 404 =>
-          val request = new Request("PUT", s"/$index/_mapping/$estype")
-          request.setEntity(new NStringEntity(json, ContentType.APPLICATION_JSON))
-          client.performRequest(request)
+          val entity = new NStringEntity(json, ContentType.APPLICATION_JSON)
+          client.performRequest(
+            "PUT",
+            s"/$index/_mapping/$estype",
+            Map.empty[String, String].asJava,
+            entity)
         case 200 =>
         case _ =>
           throw new IllegalStateException(s"/$index/$estype is invalid: $json")

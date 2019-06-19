@@ -19,12 +19,14 @@ package org.apache.predictionio.data.storage.elasticsearch
 
 import java.io.IOException
 
+import scala.collection.JavaConverters._
+
 import org.apache.http.entity.ContentType
 import org.apache.http.nio.entity.NStringEntity
 import org.apache.http.util.EntityUtils
 import org.apache.predictionio.data.storage.StorageClientConfig
 import org.apache.predictionio.data.storage.StorageClientException
-import org.elasticsearch.client.{Request, RestClient}
+import org.elasticsearch.client.RestClient
 import org.json4s._
 import org.json4s.JsonDSL._
 import org.json4s.native.JsonMethods._
@@ -46,10 +48,12 @@ class ESSequences(client: RestClient, config: StorageClientConfig, index: String
 
   def genNext(name: String): Long = {
     try {
-      val request = new Request("POST", s"/$internalIndex/$estype/$name")
-      request.addParameter("refresh", "false")
-      request.setEntity(new NStringEntity(write("n" -> name), ContentType.APPLICATION_JSON))
-      val response = client.performRequest(request)
+      val entity = new NStringEntity(write("n" -> name), ContentType.APPLICATION_JSON)
+      val response = client.performRequest(
+        "POST",
+        s"/$internalIndex/$estype/$name",
+        Map("refresh" -> "false").asJava,
+        entity)
       val jsonResponse = parse(EntityUtils.toString(response.getEntity))
       val result = (jsonResponse \ "result").extract[String]
       result match {

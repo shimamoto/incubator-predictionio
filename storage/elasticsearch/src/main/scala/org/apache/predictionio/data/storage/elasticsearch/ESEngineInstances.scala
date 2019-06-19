@@ -19,6 +19,8 @@ package org.apache.predictionio.data.storage.elasticsearch
 
 import java.io.IOException
 
+import scala.collection.JavaConverters.mapAsJavaMapConverter
+
 import org.apache.http.entity.ContentType
 import org.apache.http.nio.entity.NStringEntity
 import org.apache.http.util.EntityUtils
@@ -26,7 +28,7 @@ import org.apache.predictionio.data.storage.EngineInstance
 import org.apache.predictionio.data.storage.EngineInstanceSerializer
 import org.apache.predictionio.data.storage.EngineInstances
 import org.apache.predictionio.data.storage.StorageClientConfig
-import org.elasticsearch.client.{Request, ResponseException, RestClient}
+import org.elasticsearch.client.{ResponseException, RestClient}
 import org.json4s._
 import org.json4s.JsonDSL._
 import org.json4s.native.JsonMethods._
@@ -79,10 +81,12 @@ class ESEngineInstances(client: RestClient, config: StorageClientConfig, index: 
 
   def preInsert(): Option[String] = {
     try {
-      val request = new Request("POST", s"/$internalIndex/$estype/")
-      request.addParameter("refresh", "true")
-      request.setEntity(new NStringEntity("{}", ContentType.APPLICATION_JSON))
-      val response = client.performRequest(request)
+      val entity = new NStringEntity("{}", ContentType.APPLICATION_JSON)
+      val response = client.performRequest(
+        "POST",
+        s"/$internalIndex/$estype/",
+        Map("refresh" -> "true").asJava,
+        entity)
       val jsonResponse = parse(EntityUtils.toString(response.getEntity))
       val result = (jsonResponse \ "result").extract[String]
       result match {
@@ -102,8 +106,9 @@ class ESEngineInstances(client: RestClient, config: StorageClientConfig, index: 
   def get(id: String): Option[EngineInstance] = {
     try {
       val response = client.performRequest(
-        new Request("GET", s"/$internalIndex/$estype/$id")
-      )
+        "GET",
+        s"/$internalIndex/$estype/$id",
+        Map.empty[String, String].asJava)
       val jsonResponse = parse(EntityUtils.toString(response.getEntity))
       (jsonResponse \ "found").extract[Boolean] match {
         case true =>
@@ -178,10 +183,12 @@ class ESEngineInstances(client: RestClient, config: StorageClientConfig, index: 
   def update(i: EngineInstance): Unit = {
     val id = i.id
     try {
-      val request = new Request("POST", s"/$internalIndex/$estype/$id")
-      request.addParameter("refresh", "true")
-      request.setEntity(new NStringEntity(write(i), ContentType.APPLICATION_JSON))
-      val response = client.performRequest(request)
+      val entity = new NStringEntity(write(i), ContentType.APPLICATION_JSON)
+      val response = client.performRequest(
+        "POST",
+        s"/$internalIndex/$estype/$id",
+        Map("refresh" -> "true").asJava,
+        entity)
       val jsonResponse = parse(EntityUtils.toString(response.getEntity))
       val result = (jsonResponse \ "result").extract[String]
       result match {
@@ -198,9 +205,10 @@ class ESEngineInstances(client: RestClient, config: StorageClientConfig, index: 
 
   def delete(id: String): Unit = {
     try {
-      val request = new Request("DELETE", s"/$internalIndex/$estype/$id")
-      request.addParameter("refresh", "true")
-      val response = client.performRequest(request)
+      val response = client.performRequest(
+        "DELETE",
+        s"/$internalIndex/$estype/$id",
+        Map("refresh" -> "true").asJava)
       val json = parse(EntityUtils.toString(response.getEntity))
       val result = (json \ "result").extract[String]
       result match {

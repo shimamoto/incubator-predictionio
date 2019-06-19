@@ -19,6 +19,7 @@ package org.apache.predictionio.data.storage.elasticsearch
 
 import java.io.IOException
 
+import scala.collection.JavaConverters._
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future
 import org.apache.http.entity.{ContentType, StringEntity}
@@ -27,7 +28,7 @@ import org.apache.http.util.EntityUtils
 import org.apache.predictionio.data.storage.Event
 import org.apache.predictionio.data.storage.LEvents
 import org.apache.predictionio.data.storage.StorageClientConfig
-import org.elasticsearch.client.{Request, RequestOptions, ResponseException, RestClient}
+import org.elasticsearch.client.{ResponseException, RestClient}
 import org.joda.time.DateTime
 import org.json4s._
 import org.json4s.JsonDSL._
@@ -35,6 +36,7 @@ import org.json4s.native.JsonMethods._
 import org.json4s.native.Serialization.write
 import org.json4s.ext.JodaTimeSerializers
 import grizzled.slf4j.Logging
+import org.apache.http.message.BasicHeader
 
 class ESLEvents(val client: RestClient, config: StorageClientConfig, val baseIndex: String)
     extends LEvents with Logging {
@@ -78,11 +80,12 @@ class ESLEvents(val client: RestClient, config: StorageClientConfig, val baseInd
       val json =
         ("query" ->
           ("match_all" -> List.empty))
-      val request = new Request("POST", s"/$index/$estype/_delete_by_query")
-      request.addParameter("refresh", ESUtils.getEventDataRefresh(config))
-      request.setEntity(new NStringEntity(compact(render(json)), ContentType.APPLICATION_JSON))
-      client.performRequest(request)
-        .getStatusLine.getStatusCode match {
+      val entity = new NStringEntity(compact(render(json)), ContentType.APPLICATION_JSON)
+      client.performRequest(
+        "POST",
+        s"/$index/$estype/_delete_by_query",
+        Map("refresh" -> ESUtils.getEventDataRefresh(config)).asJava,
+        entity).getStatusLine.getStatusCode match {
           case 200 => true
           case _ =>
             error(s"Failed to remove $index/$estype")
@@ -120,10 +123,12 @@ class ESLEvents(val client: RestClient, config: StorageClientConfig, val baseInd
           ("prId" -> event.prId) ~
           ("creationTime" -> ESUtils.formatUTCDateTime(event.creationTime)) ~
           ("properties" -> write(event.properties.toJObject))
-        val request = new Request("POST", s"/$index/$estype/$id")
-        request.addParameter("refresh", ESUtils.getEventDataRefresh(config))
-        request.setEntity(new NStringEntity(compact(render(json)), ContentType.APPLICATION_JSON))
-        val response = client.performRequest(request)
+        val entity = new NStringEntity(compact(render(json)), ContentType.APPLICATION_JSON)
+        val response = client.performRequest(
+          "POST",
+          s"/$index/$estype/$id",
+          Map("refresh" -> ESUtils.getEventDataRefresh(config)).asJava,
+          entity)
         val jsonResponse = parse(EntityUtils.toString(response.getEntity))
         val result = (jsonResponse \ "result").extract[String]
         result match {
@@ -178,14 +183,13 @@ class ESLEvents(val client: RestClient, config: StorageClientConfig, val baseInd
 
         }.mkString("", "\n", "\n")
 
-        val request = new Request("POST", "/_bulk")
-        request.addParameter("refresh", ESUtils.getEventDataRefresh(config))
-        request.setEntity(new StringEntity(json))
-        val options = request.getOptions().toBuilder()
-        options.addHeader("Content-Type", "application/x-ndjson")
-        options.setHttpAsyncResponseConsumerFactory(RequestOptions.DEFAULT.getHttpAsyncResponseConsumerFactory)
-        request.setOptions(options)
-        val response = client.performRequest(request)
+        val entity = new StringEntity(json)
+        val response = client.performRequest(
+          "POST",
+          "/_bulk",
+          Map("refresh" -> ESUtils.getEventDataRefresh(config)).asJava,
+          entity,
+          new BasicHeader("Content-Type", "application/x-ndjson"))
 
         val responseJson = parse(EntityUtils.toString(response.getEntity))
         val items = (responseJson \ "items").asInstanceOf[JArray]
@@ -214,8 +218,9 @@ class ESLEvents(val client: RestClient, config: StorageClientConfig, val baseInd
     val index = baseIndex + "_" + estype
     try {
       client.performRequest(
-        new Request("GET", s"/$index/$estype/$id")
-      ).getStatusLine.getStatusCode match {
+        "GET",
+        s"/$index/$estype/$id",
+        Map.empty[String, String].asJava).getStatusLine.getStatusCode match {
           case 200 => true
           case _ => false
         }
@@ -245,9 +250,12 @@ class ESLEvents(val client: RestClient, config: StorageClientConfig, val baseInd
           ("query" ->
             ("term" ->
               ("eventId" -> eventId)))
-        val request = new Request("POST", s"/$index/$estype/_search")
-        request.setEntity(new NStringEntity(compact(render(json)), ContentType.APPLICATION_JSON))
-        val response = client.performRequest(request)
+        val entity = new NStringEntity(compact(render(json)), ContentType.APPLICATION_JSON)
+        val response = client.performRequest(
+          "POST",
+          s"/$index/$estype/_search",
+          Map.empty[String, String].asJava,
+          entity)
         val jsonResponse = parse(EntityUtils.toString(response.getEntity))
         (jsonResponse \ "hits" \ "total").extract[Long] match {
           case 0 => None
@@ -276,10 +284,12 @@ class ESLEvents(val client: RestClient, config: StorageClientConfig, val baseInd
           ("query" ->
             ("term" ->
               ("eventId" -> eventId)))
-        val request = new Request("POST", s"/$index/$estype/_delete_by_query")
-        request.addParameter("refresh", ESUtils.getEventDataRefresh(config))
-        request.setEntity(new NStringEntity(compact(render(json)), ContentType.APPLICATION_JSON))
-        val response = client.performRequest(request)
+        val entity = new NStringEntity(compact(render(json)), ContentType.APPLICATION_JSON)
+        val response = client.performRequest(
+          "POST",
+          s"/$index/$estype/_delete_by_query",
+          Map("refresh" -> ESUtils.getEventDataRefresh(config)).asJava,
+          entity)
         val jsonResponse = parse(EntityUtils.toString(response.getEntity))
         (jsonResponse \ "deleted").extract[Int] > 0
       } catch {
