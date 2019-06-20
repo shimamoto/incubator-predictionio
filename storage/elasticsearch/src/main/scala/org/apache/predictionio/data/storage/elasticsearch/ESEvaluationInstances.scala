@@ -54,8 +54,8 @@ class ESEvaluationInstances(client: RestClient, config: StorageClientConfig, ind
         ("engineParamsGeneratorClass" -> ("type" -> "keyword")) ~
         ("batch" -> ("type" -> "keyword")) ~
         ("evaluatorResults" -> ("type" -> "text")) ~
-        ("evaluatorResultsHTML" -> ("enabled" -> false)) ~
-        ("evaluatorResultsJSON" -> ("enabled" -> false))))
+        ("evaluatorResultsHTML" -> (("type" -> "object") ~ ("enabled" -> false))) ~
+        ("evaluatorResultsJSON" -> (("type" -> "object") ~ ("enabled" -> false)))))
   ESUtils.createMapping(client, internalIndex, estype, compact(render(mappingJson)))
 
   def insert(i: EvaluationInstance): String = {

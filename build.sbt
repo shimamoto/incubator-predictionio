@@ -60,8 +60,7 @@ val commonSettings = Seq(
   autoAPIMappings := true,
   licenseConfigurations := Set("compile"),
   licenseReportTypes := Seq(Csv),
-  unmanagedClasspath in Test += conf,
-  unmanagedClasspath in Test += baseDirectory.value.getParentFile / s"storage/jdbc/target/scala-${scalaBinaryVersion.value}/classes")
+  unmanagedClasspath in Test += conf)
 
 val dataElasticsearch = (project in file("storage/elasticsearch")).
   settings(commonSettings: _*)
@@ -92,13 +91,13 @@ val common = (project in file("common")).
   disablePlugins(sbtassembly.AssemblyPlugin)
 
 val data = (project in file("data")).
-  dependsOn(common).
+  dependsOn(common, dataJdbc % "compile->test;test->test").
   settings(commonSettings: _*).
   enablePlugins(GenJavadocPlugin).
   disablePlugins(sbtassembly.AssemblyPlugin)
 
 val core = (project in file("core")).
-  dependsOn(data).
+  dependsOn(data % "compile->compile;test->test").
   settings(commonSettings: _*).
   enablePlugins(GenJavadocPlugin).
   enablePlugins(BuildInfoPlugin).
@@ -123,7 +122,7 @@ val e2 = (project in file("e2")).
   disablePlugins(sbtassembly.AssemblyPlugin)
 
 val tools = (project in file("tools")).
-  dependsOn(e2).
+  dependsOn(core % "compile->compile;test->test").
   settings(commonSettings: _*).
   settings(skip in publish := true).
   enablePlugins(GenJavadocPlugin).

@@ -22,7 +22,6 @@ import org.apache.predictionio.data.storage._
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 import org.specs2._
-import org.specs2.specification.Step
 
 class PEventsSpec extends Specification with TestEvents {
 
@@ -54,7 +53,7 @@ class PEventsSpec extends Specification with TestEvents {
 
     PEvents can be implemented by:
     - JDBCPEvents ${jdbcPEvents}
-    - (stop Spark) ${Step(sc.stop())}
+    - (stop Spark) ${step(sc.stop())}
 
   """
 
@@ -62,8 +61,8 @@ class PEventsSpec extends Specification with TestEvents {
 
     JDBCPEvents should
     - behave like any PEvents implementation ${events(jdbcLocal, jdbcPar)}
-    - (table cleanup) ${Step(StorageTestUtils.dropJDBCTable(s"${dbName}_$appId"))}
-    - (table cleanup) ${Step(StorageTestUtils.dropJDBCTable(s"${dbName}_${appId}_$channelId"))}
+    - (table cleanup) ${step(StorageTestUtils.dropJDBCTable(s"${dbName}_$appId"))}
+    - (table cleanup) ${step(StorageTestUtils.dropJDBCTable(s"${dbName}_${appId}_$channelId"))}
 
   """
 
