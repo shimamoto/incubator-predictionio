@@ -60,7 +60,13 @@ val commonSettings = Seq(
   autoAPIMappings := true,
   licenseConfigurations := Set("compile"),
   licenseReportTypes := Seq(Csv),
-  unmanagedClasspath in Test += conf)
+  unmanagedClasspath in Test += conf,
+  unmanagedClasspath in Test += baseDirectory.value.getParentFile / s"storage/jdbc/target/scala-${scalaBinaryVersion.value}/classes")
+
+val commonTestSettings = Seq(
+  libraryDependencies ++= Seq(
+    "org.postgresql"   % "postgresql" % "42.2.5" % "test",
+    "org.scalikejdbc" %% "scalikejdbc-joda-time" % "3.3.4" % "test"))
 
 val dataElasticsearch = (project in file("storage/elasticsearch")).
   settings(commonSettings: _*)
@@ -75,6 +81,7 @@ val dataHdfs = (project in file("storage/hdfs")).
 
 val dataJdbc = (project in file("storage/jdbc")).
   settings(commonSettings: _*).
+  settings(commonTestSettings: _*).
   enablePlugins(GenJavadocPlugin)
 
 val dataLocalfs = (project in file("storage/localfs")).
@@ -91,14 +98,16 @@ val common = (project in file("common")).
   disablePlugins(sbtassembly.AssemblyPlugin)
 
 val data = (project in file("data")).
-  dependsOn(common, dataJdbc % "compile->test;test->test").
+  dependsOn(common).
   settings(commonSettings: _*).
+  settings(commonTestSettings: _*).
   enablePlugins(GenJavadocPlugin).
   disablePlugins(sbtassembly.AssemblyPlugin)
 
 val core = (project in file("core")).
-  dependsOn(data % "compile->compile;test->test").
+  dependsOn(data).
   settings(commonSettings: _*).
+  settings(commonTestSettings: _*).
   enablePlugins(GenJavadocPlugin).
   enablePlugins(BuildInfoPlugin).
   settings(
@@ -122,8 +131,9 @@ val e2 = (project in file("e2")).
   disablePlugins(sbtassembly.AssemblyPlugin)
 
 val tools = (project in file("tools")).
-  dependsOn(core % "compile->compile;test->test").
+  dependsOn(e2).
   settings(commonSettings: _*).
+  settings(commonTestSettings: _*).
   settings(skip in publish := true).
   enablePlugins(GenJavadocPlugin).
   enablePlugins(SbtTwirl)

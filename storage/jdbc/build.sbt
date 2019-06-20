@@ -23,7 +23,6 @@ libraryDependencies ++= Seq(
   "org.apache.predictionio" %% "apache-predictionio-core" % version.value % "provided",
   "org.apache.spark"        %% "spark-sql"      % sparkVersion.value % "provided",
   "org.scalikejdbc"         %% "scalikejdbc-joda-time" % "3.3.4",
-  "org.postgresql"           % "postgresql"     % "42.2.5" % "test",
   "org.specs2"              %% "specs2-core"    % "4.5.1" % "test")
 
 parallelExecution in Test := false

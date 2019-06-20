@@ -23,6 +23,7 @@ name := "apache-predictionio-tools"
 libraryDependencies ++= Seq(
   "com.github.zafarkhaja"  %  "java-semver"       % "0.9.0",
   "org.apache.spark"       %% "spark-sql"         % sparkVersion.value % "provided",
+  "com.typesafe.akka"      %% "akka-http-testkit" % "10.1.8" % "test",
   "org.specs2"             %% "specs2-core"       % "4.5.1" % "test")
 
 assemblyMergeStrategy in assembly := {
@@ -36,8 +37,8 @@ assemblyMergeStrategy in assembly := {
 assemblyExcludedJars in assembly := {
   val cp = (fullClasspath in assembly).value
   cp filter { _.data.getName match {
-      case "reflectasm-1.11.7.jar" => true
-      case "kryo-5.0.0-RC1.jar" => true
+    case "reflectasm-1.11.7.jar" => true
+    case "kryo-5.0.0-RC1.jar" => true
     case _ => false
   }}
 }
