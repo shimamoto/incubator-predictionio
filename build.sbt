@@ -45,7 +45,7 @@ hadoopVersion in ThisBuild := sys.props.getOrElse("hadoop.version", "2.7.7")
 
 elasticsearchVersion in ThisBuild := sys.props.getOrElse("elasticsearch.version", "6.8.0")
 
-hbaseVersion in ThisBuild := sys.props.getOrElse("hbase.version", "1.4.10")
+hbaseVersion in ThisBuild := sys.props.getOrElse("hbase.version", "1.2.6")
 
 json4sVersion in ThisBuild := {
   sparkBinaryVersion.value match {

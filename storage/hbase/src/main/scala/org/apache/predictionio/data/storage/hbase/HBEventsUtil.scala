@@ -163,11 +163,11 @@ object HBEventsUtil {
     val put = new Put(rowKey.toBytes, event.eventTime.getMillis)
 
     def addStringToE(col: Array[Byte], v: String): Put = {
-      put.addColumn(eBytes, col, Bytes.toBytes(v))
+      put.add(eBytes, col, Bytes.toBytes(v))
     }
 
     def addLongToE(col: Array[Byte], v: Long): Put = {
-      put.addColumn(eBytes, col, Bytes.toBytes(v))
+      put.add(eBytes, col, Bytes.toBytes(v))
     }
 
     addStringToE(colNames("event"), event.event)
@@ -310,12 +310,12 @@ object HBEventsUtil {
           // If you specify a startRow and stopRow,
           // to scan in reverse, the startRow needs to be lexicographically
           // after the stopRow.
-          scan.withStartRow(stop)
-          scan.withStopRow(start)
+          scan.setStartRow(stop)
+          scan.setStopRow(start)
           scan.setReversed(true)
         } else {
-          scan.withStartRow(start)
-          scan.withStopRow(stop)
+          scan.setStartRow(start)
+          scan.setStopRow(stop)
         }
       }
       case (_, _) => {

@@ -36,7 +36,7 @@ if [ -z "$PIO_ELASTICSEARCH_VERSION" ]; then
 fi
 
 if [ -z "$PIO_HBASE_VERSION" ]; then
-    PIO_HBASE_VERSION="1.4.10"
+    PIO_HBASE_VERSION="1.2.6"
 fi
 
 export ES_IMAGE="docker.elastic.co/elasticsearch/elasticsearch"

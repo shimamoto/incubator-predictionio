@@ -29,6 +29,7 @@ libraryDependencies ++= Seq(
   "org.apache.hbase"         % "hbase-server"   % hbaseVersion.value
     exclude("org.apache.hbase", "hbase-client")
     exclude("org.apache.zookeeper", "zookeeper")
+    exclude("javax.servlet", "servlet-api")
     exclude("org.mortbay.jetty", "servlet-api-2.5")
     exclude("org.mortbay.jetty", "jsp-api-2.1")
     exclude("org.mortbay.jetty", "jsp-2.1"),
