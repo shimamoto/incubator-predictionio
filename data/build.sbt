@@ -23,13 +23,9 @@ libraryDependencies ++= Seq(
   "org.scala-lang"          % "scala-reflect"  % scalaVersion.value,
   "com.github.nscala-time" %% "nscala-time"    % "2.22.0",
   "com.google.guava"        % "guava"          % "27.1-jre",
-  "com.typesafe.akka"      %% "akka-http-testkit" % "10.1.8" % "test",
   "org.apache.spark"       %% "spark-sql"      % sparkVersion.value % "provided",
   "org.clapper"            %% "grizzled-slf4j" % "1.3.3"
-    exclude("org.slf4j", "slf4j-api"),
-  "org.specs2"             %% "specs2-core"    % "4.5.1" % "test",
-  "org.scalamock"          %% "scalamock"      % "4.2.0" % "test",
-  "com.h2database"          % "h2"             % "1.4.199" % "test")
+)
 
 parallelExecution in Test := false
 

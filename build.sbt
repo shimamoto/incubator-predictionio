@@ -65,8 +65,14 @@ val commonSettings = Seq(
 
 val commonTestSettings = Seq(
   libraryDependencies ++= Seq(
-    "org.postgresql"   % "postgresql" % "42.2.5" % "test",
-    "org.scalikejdbc" %% "scalikejdbc-joda-time" % "3.3.4" % "test"))
+    "com.typesafe.akka" %% "akka-http-testkit"     % "10.1.8"  % "test",
+    "com.typesafe.akka" %% "akka-stream-testkit"   % "2.5.23"  % "test",
+    "org.specs2"        %% "specs2-core"           % "4.5.1"   % "test",
+    "org.scalatest"     %% "scalatest"             % "3.0.8"   % "test",
+    "org.scalamock"     %% "scalamock"             % "4.2.0"   % "test",
+    "com.h2database"     % "h2"                    % "1.4.199" % "test",
+    "org.postgresql"     % "postgresql"            % "42.2.5"  % "test",
+    "org.scalikejdbc"   %% "scalikejdbc-joda-time" % "3.3.4"   % "test"))
 
 val dataElasticsearch = (project in file("storage/elasticsearch")).
   settings(commonSettings: _*)
@@ -81,7 +87,6 @@ val dataHdfs = (project in file("storage/hdfs")).
 
 val dataJdbc = (project in file("storage/jdbc")).
   settings(commonSettings: _*).
-  settings(commonTestSettings: _*).
   enablePlugins(GenJavadocPlugin)
 
 val dataLocalfs = (project in file("storage/localfs")).
@@ -127,6 +132,7 @@ val core = (project in file("core")).
 val e2 = (project in file("e2")).
   dependsOn(core).
   settings(commonSettings: _*).
+  settings(commonTestSettings: _*).
   enablePlugins(GenJavadocPlugin).
   disablePlugins(sbtassembly.AssemblyPlugin)
 

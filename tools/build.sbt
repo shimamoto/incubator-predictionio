@@ -23,8 +23,8 @@ name := "apache-predictionio-tools"
 libraryDependencies ++= Seq(
   "com.github.zafarkhaja"  %  "java-semver"       % "0.9.0",
   "org.apache.spark"       %% "spark-sql"         % sparkVersion.value % "provided",
-  "com.typesafe.akka"      %% "akka-http-testkit" % "10.1.8" % "test",
-  "org.specs2"             %% "specs2-core"       % "4.5.1" % "test")
+  "com.typesafe.akka"      %% "akka-slf4j"        % "2.5.23"
+)
 
 assemblyMergeStrategy in assembly := {
   case PathList("META-INF", "LICENSE.txt") => MergeStrategy.concat

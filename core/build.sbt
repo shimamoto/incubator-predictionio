@@ -28,10 +28,7 @@ libraryDependencies ++= Seq(
   "org.apache.spark"       %% "spark-core"       % sparkVersion.value % "provided",
   "org.json4s"             %% "json4s-ext"       % json4sVersion.value,
   "org.scalaj"             %% "scalaj-http"      % "2.4.1",
-  "org.slf4j"               % "slf4j-log4j12"    % "1.7.26",
-  "org.scalatest"          %% "scalatest"        % "3.0.8" % "test",
-  "org.scalamock"          %% "scalamock"        % "4.2.0" % "test",
-  "com.h2database"          % "h2"               % "1.4.199" % "test"
+  "org.slf4j"               % "slf4j-log4j12"    % "1.7.26"
 )
 
 parallelExecution in Test := false
