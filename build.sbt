@@ -37,13 +37,15 @@ javacOptions in (ThisBuild, compile) ++= Seq("-source", "1.8", "-target", "1.8",
   "-Xlint:deprecation", "-Xlint:unchecked")
 
 // Ignore differentiation of Spark patch levels
-sparkVersion in ThisBuild := sys.props.getOrElse("spark.version", "2.4.3")
+sparkVersion in ThisBuild := sys.props.getOrElse("spark.version", "2.1.3")
 
 sparkBinaryVersion in ThisBuild := binaryVersion(sparkVersion.value)
 
 hadoopVersion in ThisBuild := sys.props.getOrElse("hadoop.version", "2.7.7")
 
-elasticsearchVersion in ThisBuild := sys.props.getOrElse("elasticsearch.version", "6.8.0")
+akkaVersion in ThisBuild := sys.props.getOrElse("akka.version", "2.5.17")
+
+elasticsearchVersion in ThisBuild := sys.props.getOrElse("elasticsearch.version", "6.8.1")
 
 hbaseVersion in ThisBuild := sys.props.getOrElse("hbase.version", "1.2.6")
 
@@ -65,14 +67,8 @@ val commonSettings = Seq(
 
 val commonTestSettings = Seq(
   libraryDependencies ++= Seq(
-    "com.typesafe.akka" %% "akka-http-testkit"     % "10.1.8"  % "test",
-    "com.typesafe.akka" %% "akka-stream-testkit"   % "2.5.23"  % "test",
-    "org.specs2"        %% "specs2-core"           % "4.5.1"   % "test",
-    "org.scalatest"     %% "scalatest"             % "3.0.8"   % "test",
-    "org.scalamock"     %% "scalamock"             % "4.2.0"   % "test",
-    "com.h2database"     % "h2"                    % "1.4.199" % "test",
-    "org.postgresql"     % "postgresql"            % "42.2.5"  % "test",
-    "org.scalikejdbc"   %% "scalikejdbc-joda-time" % "3.3.4"   % "test"))
+    "org.postgresql"   % "postgresql"  % "9.4-1204-jdbc41" % "test",
+    "org.scalikejdbc" %% "scalikejdbc" % "3.1.0" % "test"))
 
 val dataElasticsearch = (project in file("storage/elasticsearch")).
   settings(commonSettings: _*)
@@ -132,7 +128,6 @@ val core = (project in file("core")).
 val e2 = (project in file("e2")).
   dependsOn(core).
   settings(commonSettings: _*).
-  settings(commonTestSettings: _*).
   enablePlugins(GenJavadocPlugin).
   disablePlugins(sbtassembly.AssemblyPlugin)
 

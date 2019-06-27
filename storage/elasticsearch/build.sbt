@@ -25,7 +25,7 @@ libraryDependencies ++= Seq(
   "org.elasticsearch.client" % "elasticsearch-rest-client" % elasticsearchVersion.value,
   "org.elasticsearch"       %% "elasticsearch-spark-20"    % elasticsearchVersion.value
     exclude("org.apache.spark", "*"),
-  "org.specs2"              %% "specs2-core"               % "4.5.1" % "test")
+  "org.specs2"              %% "specs2"                    % "2.3.13" % "test")
 
 parallelExecution in Test := false
 

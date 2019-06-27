@@ -20,15 +20,19 @@ import PIOBuild._
 name := "apache-predictionio-core"
 
 libraryDependencies ++= Seq(
-  "com.github.scopt"       %% "scopt"            % "3.7.0",
-  "com.google.code.gson"    % "gson"             % "2.8.5",
-  "com.twitter"            %% "chill-bijection"  % "0.9.3",
-  "de.javakaffee"           % "kryo-serializers" % "0.45",
-  "net.jodah"               % "typetools"        % "0.6.1",
+  "com.github.scopt"       %% "scopt"            % "3.5.0",
+  "com.google.code.gson"    % "gson"             % "2.5",
+  "com.twitter"            %% "chill-bijection"  % "0.7.2",
+  "de.javakaffee"           % "kryo-serializers" % "0.37",
+  "net.jodah"               % "typetools"        % "0.3.1",
   "org.apache.spark"       %% "spark-core"       % sparkVersion.value % "provided",
   "org.json4s"             %% "json4s-ext"       % json4sVersion.value,
-  "org.scalaj"             %% "scalaj-http"      % "2.4.1",
-  "org.slf4j"               % "slf4j-log4j12"    % "1.7.26"
+  "org.scalaj"             %% "scalaj-http"      % "1.1.6",
+  "org.slf4j"               % "slf4j-log4j12"    % "1.7.18",
+  "org.scalatest"          %% "scalatest"        % "2.1.7" % "test",
+  "org.specs2"             %% "specs2"           % "2.3.13" % "test",
+  "org.scalamock"          %% "scalamock-scalatest-support" % "3.5.0" % "test",
+  "com.h2database"           % "h2"             % "1.4.196" % "test"
 )
 
 parallelExecution in Test := false

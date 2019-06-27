@@ -23,8 +23,6 @@ import org.joda.time.{DateTime, DateTimeZone}
 
 trait TestEvents {
 
-  protected implicit val testExecutionContext = concurrent.ExecutionContext.Implicits.global
-
   val u1BaseTime = new DateTime(654321)
   val u2BaseTime = new DateTime(6543210)
   val u3BaseTime = new DateTime(6543410)

@@ -29,7 +29,6 @@ import org.json4s.JObject
 import org.json4s.native.Serialization.read
 import org.json4s.native.Serialization.write
 import scalikejdbc._
-import scalikejdbc.jodatime.JodaWrappedResultSet._
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.Future

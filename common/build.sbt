@@ -20,11 +20,11 @@ import PIOBuild._
 name := "apache-predictionio-common"
 
 libraryDependencies ++= Seq(
-  "com.typesafe.akka" %% "akka-actor"           % "2.5.23",
-  "com.typesafe.akka" %% "akka-slf4j"           % "2.5.23",
-  "com.typesafe.akka" %% "akka-stream"          % "2.5.23",
-  "com.typesafe.akka" %% "akka-http"            % "10.1.8",
-  "org.json4s"        %% "json4s-native"        % json4sVersion.value
+  "com.typesafe.akka" %% "akka-actor"           % akkaVersion.value,
+  "com.typesafe.akka" %% "akka-slf4j"           % akkaVersion.value,
+  "com.typesafe.akka" %% "akka-http"            % "10.1.5",
+  "org.json4s"        %% "json4s-native"        % json4sVersion.value,
+  "com.typesafe.akka" %% "akka-stream"          % "2.5.12"
 )
 
 pomExtra := childrenPomExtra.value
