@@ -80,7 +80,7 @@ class ESLEvents(val client: RestClient, config: StorageClientConfig, val baseInd
       client.performRequest(
         "DELETE",
         s"/$index",
-        Map("refresh" -> ESUtils.getEventDataRefresh(config)).asJava
+        Map.empty[String, String].asJava
       ).getStatusLine.getStatusCode match {
         case 200 => true
         case _ =>
