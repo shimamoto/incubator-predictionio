@@ -112,7 +112,7 @@ class ESChannels(client: RestClient, config: StorageClientConfig, index: String)
     try {
       val entity = new NStringEntity(write(channel), ContentType.APPLICATION_JSON)
       val response = client.performRequest(
-        "POST",
+        "PUT",
         s"/$internalIndex/$estype/$id",
         Map("refresh" -> "true").asJava,
         entity)

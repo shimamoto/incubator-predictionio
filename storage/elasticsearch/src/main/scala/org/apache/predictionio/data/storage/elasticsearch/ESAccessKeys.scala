@@ -94,7 +94,7 @@ class ESAccessKeys(client: RestClient, config: StorageClientConfig, index: Strin
       ESUtils.getAll[AccessKey](client, internalIndex, estype, compact(render(json)))
     } catch {
       case e: IOException =>
-        error("Failed to access to /$internalIndex/$estype/_search", e)
+        error(s"Failed to access to /$internalIndex/$estype/_search", e)
         Nil
     }
   }
@@ -108,7 +108,7 @@ class ESAccessKeys(client: RestClient, config: StorageClientConfig, index: Strin
       ESUtils.getAll[AccessKey](client, internalIndex, estype, compact(render(json)))
     } catch {
       case e: IOException =>
-        error("Failed to access to /$internalIndex/$estype/_search", e)
+        error(s"Failed to access to /$internalIndex/$estype/_search", e)
         Nil
     }
   }
@@ -118,7 +118,7 @@ class ESAccessKeys(client: RestClient, config: StorageClientConfig, index: Strin
     try {
       val entity = new NStringEntity(write(accessKey), ContentType.APPLICATION_JSON)
       val response = client.performRequest(
-        "POST",
+        "PUT",
         s"/$internalIndex/$estype/$id",
         Map("refresh" -> "true").asJava,
         entity)

@@ -50,7 +50,7 @@ class ESSequences(client: RestClient, config: StorageClientConfig, index: String
     try {
       val entity = new NStringEntity(write("n" -> name), ContentType.APPLICATION_JSON)
       val response = client.performRequest(
-        "POST",
+        "PUT",
         s"/$internalIndex/$estype/$name",
         Map("refresh" -> "false").asJava,
         entity)

@@ -77,20 +77,16 @@ class ESLEvents(val client: RestClient, config: StorageClientConfig, val baseInd
     val estype = getEsType(appId, channelId)
     val index = baseIndex + "_" + estype
     try {
-      val json =
-        ("query" ->
-          ("match_all" -> List.empty))
-      val entity = new NStringEntity(compact(render(json)), ContentType.APPLICATION_JSON)
       client.performRequest(
-        "POST",
-        s"/$index/$estype/_delete_by_query",
-        Map("refresh" -> ESUtils.getEventDataRefresh(config)).asJava,
-        entity).getStatusLine.getStatusCode match {
-          case 200 => true
-          case _ =>
-            error(s"Failed to remove $index/$estype")
-            false
-        }
+        "DELETE",
+        s"/$index",
+        Map("refresh" -> ESUtils.getEventDataRefresh(config)).asJava
+      ).getStatusLine.getStatusCode match {
+        case 200 => true
+        case _ =>
+          error(s"Failed to remove $index/$estype")
+          false
+      }
     } catch {
       case e: Exception =>
         error(s"Failed to remove $index/$estype", e)
@@ -125,7 +121,7 @@ class ESLEvents(val client: RestClient, config: StorageClientConfig, val baseInd
           ("properties" -> write(event.properties.toJObject))
         val entity = new NStringEntity(compact(render(json)), ContentType.APPLICATION_JSON)
         val response = client.performRequest(
-          "POST",
+          "PUT",
           s"/$index/$estype/$id",
           Map("refresh" -> ESUtils.getEventDataRefresh(config)).asJava,
           entity)
@@ -133,7 +129,6 @@ class ESLEvents(val client: RestClient, config: StorageClientConfig, val baseInd
         val result = (jsonResponse \ "result").extract[String]
         result match {
           case "created" => id
-          case "updated" => id
           case _ =>
             error(s"[$result] Failed to update $index/$estype/$id")
             ""
@@ -160,7 +155,7 @@ class ESLEvents(val client: RestClient, config: StorageClientConfig, val baseInd
 
         val json = events.zip(ids).map { case (event, id) =>
           val commandJson =
-            ("index" -> (
+            ("create" -> (
               ("_index" -> index) ~
               ("_type" -> estype) ~
               ("_id" -> id)
@@ -195,12 +190,11 @@ class ESLEvents(val client: RestClient, config: StorageClientConfig, val baseInd
         val items = (responseJson \ "items").asInstanceOf[JArray]
 
         items.arr.map { case value: JObject =>
-          val result = (value \ "index" \ "result").extract[String]
-          val id = (value \ "index" \ "_id").extract[String]
+          val result = (value \ "create" \ "result").extract[String]
+          val id = (value \ "create" \ "_id").extract[String]
 
           result match {
             case "created" => id
-            case "updated" => id
             case _ =>
               error(s"[$result] Failed to update $index/$estype/$id")
               ""
@@ -266,7 +260,7 @@ class ESLEvents(val client: RestClient, config: StorageClientConfig, val baseInd
         }
       } catch {
         case e: IOException =>
-          error("Failed to access to /$index/$estype/_search", e)
+          error(s"Failed to access to /$index/$estype/_search", e)
           None
       }
     }

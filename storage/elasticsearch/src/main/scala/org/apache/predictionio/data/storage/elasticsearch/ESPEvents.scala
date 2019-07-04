@@ -124,11 +124,9 @@ class ESPEvents(client: RestClient, config: StorageClientConfig, baseIndex: Stri
               Map("refresh" -> ESUtils.getEventDataRefresh(config)).asJava,
               entity)
           val jsonResponse = parse(EntityUtils.toString(response.getEntity))
-          val result = (jsonResponse \ "result").extract[String]
-          result match {
-            case "deleted" =>
-            case _ =>
-              logger.error(s"[$result] Failed to update $index/$estype:$eventId")
+          if ((jsonResponse \ "deleted").extract[Int] == 0) {
+            logger.warn("The number of documents that were successfully deleted is 0. "
+              + s"$index/$estype:$eventId")
           }
         } catch {
           case e: IOException =>

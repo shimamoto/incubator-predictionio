@@ -84,7 +84,7 @@ class ESEngineInstances(client: RestClient, config: StorageClientConfig, index: 
       val entity = new NStringEntity("{}", ContentType.APPLICATION_JSON)
       val response = client.performRequest(
         "POST",
-        s"/$internalIndex/$estype/",
+        s"/$internalIndex/$estype",
         Map("refresh" -> "true").asJava,
         entity)
       val jsonResponse = parse(EntityUtils.toString(response.getEntity))
@@ -185,7 +185,7 @@ class ESEngineInstances(client: RestClient, config: StorageClientConfig, index: 
     try {
       val entity = new NStringEntity(write(i), ContentType.APPLICATION_JSON)
       val response = client.performRequest(
-        "POST",
+        "PUT",
         s"/$internalIndex/$estype/$id",
         Map("refresh" -> "true").asJava,
         entity)

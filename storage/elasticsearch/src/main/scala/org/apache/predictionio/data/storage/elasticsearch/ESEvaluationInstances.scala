@@ -110,7 +110,7 @@ class ESEvaluationInstances(client: RestClient, config: StorageClientConfig, ind
       ESUtils.getAll[EvaluationInstance](client, internalIndex, estype, compact(render(json)))
     } catch {
       case e: IOException =>
-        error("Failed to access to /$internalIndex/$estype/_search", e)
+        error(s"Failed to access to /$internalIndex/$estype/_search", e)
         Nil
     }
   }
@@ -127,7 +127,7 @@ class ESEvaluationInstances(client: RestClient, config: StorageClientConfig, ind
       ESUtils.getAll[EvaluationInstance](client, internalIndex, estype, compact(render(json)))
     } catch {
       case e: IOException =>
-        error("Failed to access to /$internalIndex/$estype/_search", e)
+        error(s"Failed to access to /$internalIndex/$estype/_search", e)
         Nil
     }
   }
@@ -137,7 +137,7 @@ class ESEvaluationInstances(client: RestClient, config: StorageClientConfig, ind
     try {
       val entity = new NStringEntity(write(i), ContentType.APPLICATION_JSON)
       val response = client.performRequest(
-        "POST",
+        "PUT",
         s"/$internalIndex/$estype/$id",
         Map("refresh" -> "true").asJava,
         entity)

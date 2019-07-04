@@ -130,7 +130,7 @@ class ESApps(client: RestClient, config: StorageClientConfig, index: String)
       ESUtils.getAll[App](client, internalIndex, estype, compact(render(json)))
     } catch {
       case e: IOException =>
-        error("Failed to access to /$internalIndex/$estype/_search", e)
+        error(s"Failed to access to /$internalIndex/$estype/_search", e)
         Nil
     }
   }
@@ -138,9 +138,9 @@ class ESApps(client: RestClient, config: StorageClientConfig, index: String)
   def update(app: App): Unit = {
     val id = app.id.toString
     try {
-      val entity = new NStringEntity(write(app), ContentType.APPLICATION_JSON);
+      val entity = new NStringEntity(write(app), ContentType.APPLICATION_JSON)
       val response = client.performRequest(
-        "POST",
+        "PUT",
         s"/$internalIndex/$estype/$id",
         Map("refresh" -> "true").asJava,
         entity)
