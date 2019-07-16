@@ -161,25 +161,24 @@ object ESUtils {
     index: String,
     json: String)(
       implicit formats: Formats): String = {
-    val response = client.performRequest(
-      "GET",
+      client.performRequest(
+      "HEAD",
       s"/$index",
-      Map.empty[String, String].asJava)
-    response.getStatusLine.getStatusCode match {
-      case 404 =>
-        val entity = new NStringEntity(json, ContentType.APPLICATION_JSON)
-        client.performRequest(
-          "PUT",
-          s"/$index",
-          Map("include_type_name" -> "false"),
-          entity).getStatusLine.getStatusCode match {
-          case 200 =>
-            "_doc"
-          case _ =>
-            throw new IllegalStateException(s"/$index is invalid: $json")
-        }
+      Map.empty[String, String].asJava).getStatusLine.getStatusCode match {
+        case 404 =>
+          val entity = new NStringEntity(json, ContentType.APPLICATION_JSON)
+          client.performRequest(
+            "PUT",
+            s"/$index",
+            Map("include_type_name" -> "false"),
+            entity).getStatusLine.getStatusCode match {
+              case 200 =>
+                "_doc"
+              case _ =>
+                throw new IllegalStateException(s"/$index is invalid: $json")
+          }
       case 200 =>
-        typeName(index, response)
+        esType(client, index)
       case _ =>
         throw new IllegalStateException(s"/$index is invalid: $json")
     }
@@ -195,18 +194,13 @@ object ESUtils {
       Map.empty[String, String].asJava)
     response.getStatusLine.getStatusCode match {
       case 200 =>
-        typeName(index, response)
+        (parse(EntityUtils.toString(response.getEntity)) \ index \ "mappings")
+          .extract[JObject].values.collectFirst {
+          case (name, _) if name != "_doc" && name != "properties" => name
+        }.getOrElse("_doc")
       case _ =>
         throw new IllegalStateException(s"/$index is invalid.")
     }
-  }
-
-  private def typeName(index: String, response: Response)(
-    implicit formats: Formats) = {
-    (parse(EntityUtils.toString(response.getEntity)) \ index \ "mappings")
-      .extract[JObject].values.collectFirst {
-      case (name, _) if name != "_doc" && name != "properties" => name
-    }.getOrElse("_doc")
   }
 
   def formatUTCDateTime(dt: DateTime): String = {
