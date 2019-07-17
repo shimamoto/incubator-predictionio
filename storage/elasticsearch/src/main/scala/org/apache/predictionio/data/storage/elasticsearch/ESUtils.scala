@@ -18,10 +18,10 @@
 package org.apache.predictionio.data.storage.elasticsearch
 
 import scala.collection.JavaConversions._
-import scala.collection.JavaConverters._
+
 import org.apache.http.entity.ContentType
 import org.apache.http.nio.entity.NStringEntity
-import org.elasticsearch.client.{Response, RestClient}
+import org.elasticsearch.client.RestClient
 import org.json4s._
 import org.json4s.JsonDSL._
 import org.json4s.native.JsonMethods._
@@ -161,10 +161,10 @@ object ESUtils {
     index: String,
     json: String)(
       implicit formats: Formats): String = {
-      client.performRequest(
+    client.performRequest(
       "HEAD",
       s"/$index",
-      Map.empty[String, String].asJava).getStatusLine.getStatusCode match {
+      Map("include_type_name" -> "false")).getStatusLine.getStatusCode match {
         case 404 =>
           val entity = new NStringEntity(json, ContentType.APPLICATION_JSON)
           client.performRequest(
@@ -176,14 +176,17 @@ object ESUtils {
                 "_doc"
               case _ =>
                 throw new IllegalStateException(s"/$index is invalid: $json")
-          }
-      case 200 =>
-        esType(client, index)
-      case _ =>
-        throw new IllegalStateException(s"/$index is invalid: $json")
-    }
+            }
+        case 200 =>
+          esType(client, index)
+        case _ =>
+          throw new IllegalStateException(s"/$index is invalid: $json")
+      }
   }
 
+  // We cannot have several types within a single index as of ES 6.0, so
+  // continue to add or update a document under the current type. This code is
+  // a step towards ES 7.0 support (removal of mapping types).
   def esType(
     client: RestClient,
     index: String)(
@@ -191,7 +194,7 @@ object ESUtils {
     val response = client.performRequest(
       "GET",
       s"/$index",
-      Map.empty[String, String].asJava)
+      Map("include_type_name" -> "true"))
     response.getStatusLine.getStatusCode match {
       case 200 =>
         (parse(EntityUtils.toString(response.getEntity)) \ index \ "mappings")
