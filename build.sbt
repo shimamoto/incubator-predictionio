@@ -36,8 +36,7 @@ fork in (ThisBuild, run) := true
 javacOptions in (ThisBuild, compile) ++= Seq("-source", "1.8", "-target", "1.8",
   "-Xlint:deprecation", "-Xlint:unchecked")
 
-// Ignore differentiation of Spark patch levels
-sparkVersion in ThisBuild := sys.props.getOrElse("spark.version", "2.1.3")
+sparkVersion in ThisBuild := sys.props.getOrElse("spark.version", "2.4.3")
 
 sparkBinaryVersion in ThisBuild := binaryVersion(sparkVersion.value)
 
